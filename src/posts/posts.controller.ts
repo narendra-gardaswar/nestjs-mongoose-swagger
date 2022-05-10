@@ -18,6 +18,11 @@ export class PostsController {
     return await this.postsService.findOnePost(postId);
   }
 
+  @Get('/:id/comments')
+  async findOnePostComments(@Param('id') postId: string): Promise<any> {
+    return await this.postsService.findOnePostComments(postId);
+  }
+
   //create post
   @Post('/create')
   async createPost(@Body() createPostDto: CreatePostDto): Promise<any> {
