@@ -28,4 +28,12 @@ export class CommentsService {
       return error;
     }
   }
+
+  async findCommentsForPostId(postId: string): Promise<any> {
+    try {
+      return await this.commentModel.find({ postId: { $in: postId } });
+    } catch (error: any) {
+      return error;
+    }
+  }
 }

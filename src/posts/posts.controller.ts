@@ -8,19 +8,19 @@ export class PostsController {
 
   //get all posts
   @Get()
-  public async findAllPost(): Promise<any> {
+  async findAllPost(): Promise<any> {
     return await this.postsService.findAllPost();
   }
 
   //get single post
   @Get('/:id')
-  public async findOnePost(@Param('id') postId: string): Promise<any> {
+  async findOnePost(@Param('id') postId: string): Promise<any> {
     return await this.postsService.findOnePost(postId);
   }
 
   //create post
   @Post('/create')
-  public async createPost(@Body() createPostDto: CreatePostDto): Promise<any> {
+  async createPost(@Body() createPostDto: CreatePostDto): Promise<any> {
     const post = await this.postsService.createPost(createPostDto);
     return {
       message: 'New Post Added successfully',

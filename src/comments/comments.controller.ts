@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 
@@ -6,15 +6,12 @@ import { CreateCommentDto } from './dtos/create-comment.dto';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  // @Get()
-  // public async findAllPost(): Promise<any> {
-  //   return await this.postsService.findAllPost();
-  // }
-
-  // @Get('/:id')
-  // public async findOnePost(@Param('id') postId: string): Promise<any> {
-  //   return await this.postsService.findOnePost(postId);
-  // }
+  @Get()
+  public async findCommentsForPostId(
+    @Query() query: { postId: string },
+  ): Promise<any> {
+    return await this.commentsService.findCommentsForPostId(query.postId);
+  }
 
   @Post('/:id')
   async createComment(

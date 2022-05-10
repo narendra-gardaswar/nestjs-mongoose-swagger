@@ -28,9 +28,16 @@ export class PostsService {
 
   async findOnePost(postId: string): Promise<any> {
     try {
-      console.log(postId);
-      return await this.postModel.findById({ _id: postId });
-    } catch (error: any) {
+      return await this.postModel.findById(postId);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async findOnePostComments(postId: string): Promise<any> {
+    try {
+      return await this.postModel.findById(postId);
+    } catch (error) {
       return error;
     }
   }
