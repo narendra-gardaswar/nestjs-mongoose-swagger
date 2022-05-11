@@ -17,13 +17,12 @@ export class CommentsService {
       const newComment = new this.commentModel(body);
       let comment: any = await newComment.save();
       await comment.postId.push(postId);
-      await comment.save();
 
       let post: any = await this.postsService.findOnePost(postId);
       await post.comments.push(comment._id);
       await post.save();
 
-      return comment;
+      return await comment.save();
     } catch (error: any) {
       return error;
     }
