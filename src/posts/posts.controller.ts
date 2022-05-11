@@ -36,11 +36,7 @@ export class PostsController {
   //create post
   @Post()
   async createPost(@Body() createPostDto: CreatePostDto): Promise<any> {
-    const post = await this.postsService.createPost(createPostDto);
-    return {
-      message: 'New Post Added successfully',
-      post,
-    };
+    return await this.postsService.createPost(createPostDto);
   }
 
   //Update post
@@ -49,19 +45,12 @@ export class PostsController {
     @Param('id') postId: string,
     @Body() body: UpdatePostDto,
   ): Promise<any> {
-    const updatedPost = await this.postsService.updatePost(postId, body);
-    return {
-      message: 'Post Updated successfully',
-      updatedPost,
-    };
+    return await this.postsService.updatePost(postId, body);
   }
 
   //Delete post
   @Delete('/:id')
   async deletePost(@Param('id') postId: string): Promise<any> {
-    const updatedPost = await this.postsService.deletePost(postId);
-    return {
-      message: 'Post Deleted successfully',
-    };
+    return await this.postsService.deletePost(postId);
   }
 }

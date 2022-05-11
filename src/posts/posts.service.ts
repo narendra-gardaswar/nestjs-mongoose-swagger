@@ -18,64 +18,38 @@ export class PostsService {
     private readonly commentsService: CommentsService,
   ) {}
 
-  async createPost(body: CreatePostDto): Promise<any> {
-    try {
-      const newPost = new this.postModel(body);
-      return await newPost.save();
-    } catch (error: any) {
-      return error;
-    }
+  async createPost(createPostDto: CreatePostDto): Promise<any> {
+    const newPost: Post = new this.postModel(createPostDto);
+    return await newPost.save();
   }
 
-  async updatePost(postId: string, body: UpdatePostDto): Promise<any> {
-    try {
-      await this.postModel.findByIdAndUpdate(postId, body);
-      return await this.postModel.findById(postId);
-    } catch (error: any) {
-      return error;
-    }
+  async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<any> {
+    let post: Post = await this.postModel.findById(postId);
+    if (!post) throw new BadRequestException('Post not found');
+    const updatedPost: Post = new this.postModel(updatePostDto);
+    post = updatedPost;
+    return await post.save();
   }
 
   async deletePost(postId: string): Promise<any> {
-    try {
-      const post = await this.postModel.findById(postId);
-
-      if (!post) {
-        throw new BadRequestException('Post not found');
-      } else {
-        return await this.postModel.remove(postId);
-      }
-    } catch (error: any) {
-      return error;
-    }
+    const post: Post = await this.postModel.findById(postId);
+    if (!post) throw new BadRequestException('Post not found');
+    return await post.remove();
   }
+
   async findAllPost(): Promise<any> {
-    try {
-      return await this.postModel.find();
-    } catch (error: any) {
-      return error;
-    }
+    const posts: any = await this.postModel.find();
+    if (!posts) throw new BadRequestException('Posts not found');
+    return posts;
   }
 
   async findOnePost(postId: string): Promise<any> {
-    try {
-      const post = await this.postModel.findById(postId);
-
-      if (!post) {
-        throw new BadRequestException('Post not found');
-      } else {
-        return post;
-      }
-    } catch (error) {
-      return error;
-    }
+    const post: Post = await this.postModel.findById(postId);
+    if (!post) throw new BadRequestException('Post not found');
+    return post;
   }
 
   async findOnePostComments(postId: string): Promise<any> {
-    try {
-      return await this.commentsService.findCommentsForPostId(postId);
-    } catch (error) {
-      return error;
-    }
+    return await this.commentsService.findCommentsByPostId(postId);
   }
 }

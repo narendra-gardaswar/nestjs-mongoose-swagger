@@ -1,4 +1,10 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PostsService } from 'src/posts/posts.service';
@@ -13,27 +19,25 @@ export class CommentsService {
     private readonly postsService: PostsService,
   ) {}
 
-  async createComment(postId: string, body: CreateCommentDto): Promise<any> {
-    try {
-      const newComment = new this.commentModel(body);
-      let comment: any = await newComment.save();
-      await comment.postId.push(postId);
+  async createComment(postId: any, body: CreateCommentDto): Promise<any> {
+    const newComment = new this.commentModel(body);
+    let comment: any = await newComment.save();
+    if (!comment)
+      throw new InternalServerErrorException('Failed to create comment');
+    comment.postId = postId;
+    await comment.save();
 
-      let post: any = await this.postsService.findOnePost(postId);
-      await post.comments.push(comment._id);
-      await post.save();
+    let post: any = await this.postsService.findOnePost(postId);
+    if (!post) throw new NotFoundException('Post not found');
+    await post.comments.push(comment._id);
+    await post.save();
 
-      return await comment.save();
-    } catch (error: any) {
-      return error;
-    }
+    return comment;
   }
 
-  async findCommentsForPostId(postId: string): Promise<any> {
-    try {
-      return await this.commentModel.find({ postId: { $in: postId } });
-    } catch (error: any) {
-      return error;
-    }
+  async findCommentsByPostId(postId: any): Promise<any> {
+    const comments: any = await this.commentModel.find({ postId: postId });
+    if (!comments) throw new NotFoundException('Comments not found');
+    return comments;
   }
 }

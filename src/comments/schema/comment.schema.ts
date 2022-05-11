@@ -5,8 +5,12 @@ import { Post } from 'src/posts/schemas/post.schema';
 
 @Schema()
 export class Comment extends Document {
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
-  postId: Post[];
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+  })
+  postId: Post;
+
   @Prop()
   body: string;
 }
