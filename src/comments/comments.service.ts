@@ -20,24 +20,32 @@ export class CommentsService {
   ) {}
 
   async createComment(postId: any, body: CreateCommentDto): Promise<any> {
-    const newComment = new this.commentModel(body);
-    let comment: any = await newComment.save();
-    if (!comment)
-      throw new InternalServerErrorException('Failed to create comment');
-    comment.postId = postId;
-    await comment.save();
+    try {
+      const newComment = new this.commentModel(body);
+      let comment: any = await newComment.save();
+      if (!comment)
+        throw new InternalServerErrorException('Failed to create comment');
+      comment.postId = postId;
+      await comment.save();
 
-    let post: any = await this.postsService.findOnePost(postId);
-    if (!post) throw new NotFoundException('Post not found');
-    await post.comments.push(comment._id);
-    await post.save();
+      let post: any = await this.postsService.findOnePost(postId);
+      if (!post) throw new NotFoundException('Post not found');
+      await post.comments.push(comment._id);
+      await post.save();
 
-    return comment;
+      return comment;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async findCommentsByPostId(postId: any): Promise<any> {
-    const comments: any = await this.commentModel.find({ postId: postId });
-    if (!comments) throw new NotFoundException('Comments not found');
-    return comments;
+    try {
+      const comments: any = await this.commentModel.find({ postId: postId });
+      if (!comments) throw new NotFoundException('Comments not found');
+      return comments;
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
