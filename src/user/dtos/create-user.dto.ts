@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsNotEmpty,
   IsString,
   Matches,
@@ -15,10 +16,10 @@ export class CreateUserDto {
   readonly name: string;
 
   @IsNotEmpty({ message: 'username is required' })
-  @IsString()
+  @IsEmail()
   @MinLength(4)
   @MaxLength(20)
-  readonly username: string;
+  readonly email: string;
 
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
@@ -33,8 +34,4 @@ export class CreateUserDto {
       'password must include at least one uppercase, lowercase, number and special character',
   })
   readonly password: string;
-
-  @IsNotEmpty({ message: 'Confirm Password is required' })
-  @IsString()
-  readonly confirmPassword: string;
 }

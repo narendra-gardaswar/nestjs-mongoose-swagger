@@ -1,55 +1,69 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Model } from 'mongoose';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { LoginUserDto } from './dtos/login-user.dto';
-import { User } from './schemas/user.schema';
+import { CreateUserDto } from 'src/user/dtos/create-user.dto';
+import { ExistingUserDto } from 'src/user/dtos/existing-user.dto';
+import { UserDetails } from 'src/user/interfaces/user-details.interface';
+import { UserService } from 'src/user/user.service';
+
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel('User') private userModel: Model<User>) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+  ) {}
 
-  async signUp(createUserDto: CreateUserDto): Promise<any> {
-    let { name, username, password, confirmPassword } = createUserDto;
-    if (password !== confirmPassword)
-      throw new NotAcceptableException('password does not match');
-    const existingUser = await this.userModel.findOne({ username });
-    if (existingUser)
-      throw new NotAcceptableException('Username already exists');
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const usernameLower = username.toLowerCase();
-    const user = new this.userModel({
-      name,
-      username: usernameLower,
-      password: hashedPassword,
-    });
-    const userData = await user.save();
-    if (!userData)
-      throw new InternalServerErrorException('Failed to create user');
-    return {
-      response: 'user Created',
-      userId: userData._id,
-      username: userData.username,
-    };
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 12);
   }
 
-  async login(loginUserDto: LoginUserDto): Promise<any> {
-    let { username, password } = loginUserDto;
-    const user = await this.userModel.findOne({ username });
+  async doesPasswordMatch(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return bcrypt.compare(password, hashedPassword);
+  }
 
-    if (!user) throw new NotFoundException('could not find the user');
-    const passwordValid = await bcrypt.compare(password, user.password);
-    if (!passwordValid) throw new BadRequestException('Incorrect Password');
-    return {
-      response: 'user logged in',
-      userId: user.id,
-      userName: user.username,
-    };
+  async validateUser(email: string, password: string): Promise<UserDetails> {
+    const user = await this.userService.findByEmail(email);
+    const doesUserExist = !!user;
+    if (!doesUserExist) throw new NotFoundException('Invalid Email');
+
+    const isPasswordValid = await this.doesPasswordMatch(
+      password,
+      user.password,
+    );
+    if (!isPasswordValid) throw new BadRequestException('Invalid password');
+
+    return this.userService._getUserDetials(user);
+  }
+
+  async signUp(user: Readonly<CreateUserDto>): Promise<UserDetails> {
+    let { name, email, password } = user;
+
+    const existingUser = await this.userService.findByEmail(email);
+    if (existingUser) throw new NotAcceptableException('Email already in use');
+    const hashedPassword = await this.hashPassword(password);
+
+    const newUser = await this.userService.createUser(
+      name,
+      email,
+      hashedPassword,
+    );
+
+    return this.userService._getUserDetials(newUser);
+  }
+
+  async login(existingUser: ExistingUserDto): Promise<{ token: string }> {
+    let { email, password } = existingUser;
+    const user = await this.validateUser(email, password);
+    if (!user.id) throw new BadRequestException('Invalid email or password');
+    const token = await this.jwtService.signAsync({ user });
+    return { token: token };
   }
 }

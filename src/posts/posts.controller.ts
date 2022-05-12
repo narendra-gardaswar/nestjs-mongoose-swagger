@@ -6,7 +6,9 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { UpdatePostDto } from './dtos/update-post.dto';
 import { PostsService } from './posts.service';
@@ -16,6 +18,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   //get all posts
+  @UseGuards(JwtGuard)
   @Get()
   async findAllPost(): Promise<any> {
     return await this.postsService.findAllPost();
