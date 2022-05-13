@@ -52,9 +52,14 @@ export class CommentsService {
   }
 
   async findById(id: string): Promise<any> {
-    const comments = await this.commentModel.find({ postId: id }).exec();
-    if (!comments) throw new NotFoundException('Comments not found');
-    return comments.map((comment) => this._getCommentDetials(comment));
+    const comments = await this.commentModel.find({ postId: id });
+
+    if (comments === undefined || comments.length == 0)
+      throw new NotFoundException('Comments not found');
+    const commentDetails = comments.map((comment) =>
+      this._getCommentDetials(comment),
+    );
+    return commentDetails;
   }
 
   async deleteMany(postId: string): Promise<any> {

@@ -32,15 +32,16 @@ export class PostsService {
   async findById(id: string): Promise<PostDetails> {
     const post = await this.postModel.findById(id);
     if (!post) throw new NotFoundException('Post not found');
-    return this._getPostDetials(post);
+    const postDetails = this._getPostDetials(post);
+    return postDetails;
   }
 
   async findAll(): Promise<any> {
     const posts = await this.postModel.find();
-    // console.log(posts);
-    const doesPostExist = !!posts;
-    if (!doesPostExist) throw new NotFoundException('Posts not found');
-    return posts.map((post) => this._getPostDetials(post));
+    const postDetails = posts.map((post) => this._getPostDetials(post));
+    if (postDetails === undefined || postDetails.length == 0)
+      throw new NotFoundException('Posts not found');
+    return postDetails;
   }
 
   async createPost(post: CreatePostDto): Promise<PostDetails> {
@@ -52,8 +53,6 @@ export class PostsService {
   }
 
   async updatePost(postId: string, post: UpdatePostDto): Promise<PostDetails> {
-    const existingPost = this.findById(postId);
-    if (!existingPost) throw new NotFoundException('Post not found');
     const updatedPost = await this.postModel
       .findByIdAndUpdate(postId, post, {
         new: true,
@@ -67,10 +66,6 @@ export class PostsService {
   async deletePost(
     postId: string,
   ): Promise<{ response: string; deletedPost: any }> {
-    const existingPost = this.findById(postId);
-    if (!existingPost)
-      throw new NotFoundException('Post not found, Failed to delete');
-
     const deletedPost = await this.postModel.findByIdAndDelete(postId);
 
     if (!deletedPost)
@@ -85,7 +80,6 @@ export class PostsService {
 
   async findPostComments(postId: string): Promise<any> {
     const comments = await this.commentsService.findById(postId);
-    if (!comments) throw new NotFoundException('comments not found');
     return comments;
   }
   async addComment(postId: string, commentId: string): Promise<any> {
