@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -31,44 +30,68 @@ export class PostsService {
   }
 
   async findById(id: string): Promise<PostDetails> {
-    const post = await this.postModel.findById(id).populate('comments').exec();
+    const post = await this.postModel.findById(id);
     if (!post) throw new NotFoundException('Post not found');
     return this._getPostDetials(post);
+  }
+
+  async findAll(): Promise<any> {
+    const posts = await this.postModel.find();
+    // console.log(posts);
+    const doesPostExist = !!posts;
+    if (!doesPostExist) throw new NotFoundException('Posts not found');
+    return posts.map((post) => this._getPostDetials(post));
   }
 
   async createPost(post: CreatePostDto): Promise<PostDetails> {
     const newPost = new this.postModel(post);
     const result = await newPost.save();
-    if (!result) throw new InternalServerErrorException('Post Not Created');
+    if (!result)
+      throw new InternalServerErrorException('Failed to create post');
     return this._getPostDetials(result);
   }
 
   async updatePost(postId: string, post: UpdatePostDto): Promise<PostDetails> {
     const existingPost = this.findById(postId);
-    if (!existingPost) throw new BadRequestException('Post not found');
+    if (!existingPost) throw new NotFoundException('Post not found');
     const updatedPost = await this.postModel
       .findByIdAndUpdate(postId, post, {
         new: true,
       })
       .exec();
+    if (!updatedPost)
+      throw new InternalServerErrorException('Failed to Update post');
     return this._getPostDetials(updatedPost);
   }
 
-  async deletePost(postId: string): Promise<{ response: string }> {
+  async deletePost(
+    postId: string,
+  ): Promise<{ response: string; deletedPost: any }> {
     const existingPost = this.findById(postId);
     if (!existingPost)
-      throw new BadRequestException('Post not found, Failed to delete');
-    await this.postModel.findByIdAndDelete(postId);
-    return { response: 'Post deleted successfully' };
-  }
+      throw new NotFoundException('Post not found, Failed to delete');
 
-  async findAll(): Promise<any> {
-    const posts = await this.postModel.find().exec();
-    if (!posts) throw new BadRequestException('Posts not found');
-    return posts.map((post) => this._getPostDetials(post));
+    const deletedPost = await this.postModel.findByIdAndDelete(postId);
+
+    if (!deletedPost)
+      throw new InternalServerErrorException('Failed to Delete post');
+
+    const deletedCount = await this.commentsService.deleteMany(postId);
+    if (deletedCount <= 0)
+      throw new InternalServerErrorException('Failed to Delete post');
+
+    return { response: 'Post Deleted', deletedPost: deletedPost };
   }
 
   async findPostComments(postId: string): Promise<any> {
-    return await this.commentsService.findById(postId);
+    const comments = await this.commentsService.findById(postId);
+    if (!comments) throw new NotFoundException('comments not found');
+    return comments;
+  }
+  async addComment(postId: string, commentId: string): Promise<any> {
+    return this.postModel.updateOne(
+      { _id: postId },
+      { $push: { comments: commentId } },
+    );
   }
 }

@@ -42,18 +42,22 @@ export class CommentsService {
     comment.postId = postId;
     await comment.save();
 
-    let post: any = await this.postsService.findById(postId);
-    if (!post) throw new NotFoundException('Post not found');
-    await post.comments.push(comment._id);
-    const updatedPost = new this.commentModel(post);
-    await updatedPost.save();
+    const updatedPost = await this.postsService.addComment(postId, comment._id);
+    if (!updatedPost)
+      throw new InternalServerErrorException('Failed to create comment');
+    // await existingPost.comments.push(comment._id);
+    // await existingPost.save();
 
     return this._getCommentDetials(comment);
   }
 
   async findById(id: string): Promise<any> {
-    const comments = await this.commentModel.find({ postId: id });
+    const comments = await this.commentModel.find({ postId: id }).exec();
     if (!comments) throw new NotFoundException('Comments not found');
     return comments.map((comment) => this._getCommentDetials(comment));
+  }
+
+  async deleteMany(postId: string): Promise<any> {
+    return await this.commentModel.deleteMany({ postId: postId }).exec();
   }
 }

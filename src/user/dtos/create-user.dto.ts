@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -13,12 +14,14 @@ export class CreateUserDto {
   @MaxLength(50, {
     message: 'First name Maximal length is 50 characters',
   })
+  @ApiProperty()
   readonly name: string;
 
   @IsNotEmpty({ message: 'username is required' })
   @IsEmail()
   @MinLength(4)
   @MaxLength(20)
+  @ApiProperty()
   readonly email: string;
 
   @IsNotEmpty({ message: 'Password is required' })
@@ -33,5 +36,6 @@ export class CreateUserDto {
     message:
       'password must include at least one uppercase, lowercase, number and special character',
   })
+  @ApiProperty()
   readonly password: string;
 }
