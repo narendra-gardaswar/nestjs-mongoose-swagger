@@ -3,8 +3,10 @@ import * as mongoose from 'mongoose';
 import { Document } from 'mongoose';
 import { Post } from 'src/posts/schemas/post.schema';
 
+export type CommentDocument = Comment & Document;
+
 @Schema()
-export class Comment extends Document {
+export class Comment {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post',

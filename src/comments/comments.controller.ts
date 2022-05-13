@@ -6,7 +6,6 @@ import { CreateCommentDto } from './dtos/create-comment.dto';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  //Create comment for a post
   @Post('/:id')
   async createComment(
     @Param('id') postId: string,
@@ -15,11 +14,10 @@ export class CommentsController {
     return await this.commentsService.createComment(postId, createCommentDto);
   }
 
-  //FInd  comments by PostId
   @Get()
   public async findCommentsByPostId(
     @Query() query: { postId: string },
   ): Promise<any> {
-    return await this.commentsService.findCommentsByPostId(query.postId);
+    return await this.commentsService.findById(query.postId);
   }
 }

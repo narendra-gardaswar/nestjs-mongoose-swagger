@@ -2,12 +2,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Document } from 'mongoose';
 import { Comment } from 'src/comments/schema/comment.schema';
+
+export type PostDocument = Post & Document;
+
 @Schema()
-export class Post extends Document {
-  @Prop()
+export class Post {
+  @Prop({ required: true })
   title: string;
 
-  @Prop()
+  @Prop({ required: true })
   body: string;
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }] })

@@ -11,49 +11,44 @@ import {
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { UpdatePostDto } from './dtos/update-post.dto';
+import { PostDetails } from './interfaces/post-details.interface';
 import { PostsService } from './posts.service';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  //get all posts
   @UseGuards(JwtGuard)
   @Get()
-  async findAllPost(): Promise<any> {
-    return await this.postsService.findAllPost();
+  async findAll(): Promise<any> {
+    return await this.postsService.findAll();
   }
 
-  //get single post
   @Get('/:id')
-  async findOnePost(@Param('id') postId: string): Promise<any> {
-    return await this.postsService.findOnePost(postId);
+  async findPost(@Param('id') postId: string): Promise<PostDetails> {
+    return await this.postsService.findById(postId);
   }
 
-  //get post comments
   @Get('/:id/comments')
-  async findOnePostComments(@Param('id') postId: string): Promise<any> {
-    return await this.postsService.findOnePostComments(postId);
+  async findPostComments(@Param('id') postId: string): Promise<any> {
+    return await this.postsService.findPostComments(postId);
   }
 
-  //create post
   @Post()
-  async createPost(@Body() createPostDto: CreatePostDto): Promise<any> {
-    return await this.postsService.createPost(createPostDto);
+  async createPost(@Body() post: CreatePostDto): Promise<PostDetails> {
+    return await this.postsService.createPost(post);
   }
 
-  //Update post
   @Put('/:id')
-  async updateUser(
+  async updatePost(
     @Param('id') postId: string,
-    @Body() body: UpdatePostDto,
-  ): Promise<any> {
-    return await this.postsService.updatePost(postId, body);
+    @Body() post: UpdatePostDto,
+  ): Promise<PostDetails> {
+    return await this.postsService.updatePost(postId, post);
   }
 
-  //Delete post
   @Delete('/:id')
-  async deletePost(@Param('id') postId: string): Promise<any> {
+  async deletePost(@Param('id') postId: string): Promise<{ response: string }> {
     return await this.postsService.deletePost(postId);
   }
 }

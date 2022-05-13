@@ -3,77 +3,72 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CommentsService } from 'src/comments/comments.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { UpdatePostDto } from './dtos/update-post.dto';
-import { Post } from './schemas/post.schema';
+import { PostDetails } from './interfaces/post-details.interface';
+import { PostDocument } from './schemas/post.schema';
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectModel(Post.name) private readonly postModel: Model<Post>,
+    @InjectModel('Post') private readonly postModel: Model<PostDocument>,
     @Inject(forwardRef(() => CommentsService))
     private readonly commentsService: CommentsService,
   ) {}
 
-  async createPost(createPostDto: CreatePostDto): Promise<any> {
-    try {
-      const newPost: Post = new this.postModel(createPostDto);
-      return await newPost.save();
-    } catch (error) {
-      console.error(error);
-    }
+  _getPostDetials(post: PostDocument): PostDetails {
+    return {
+      id: post._id,
+      title: post.title,
+      body: post.body,
+      comments: post.comments,
+    };
   }
 
-  async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<any> {
-    try {
-      let post: Post = await this.postModel.findById(postId);
-      if (!post) throw new BadRequestException('Post not found');
-      const updatedPost: Post = new this.postModel(updatePostDto);
-      post = updatedPost;
-      return await post.save();
-    } catch (error) {
-      console.log(error);
-    }
+  async findById(id: string): Promise<PostDetails> {
+    const post = await this.postModel.findById(id).populate('comments').exec();
+    if (!post) throw new NotFoundException('Post not found');
+    return this._getPostDetials(post);
   }
 
-  async deletePost(postId: string): Promise<any> {
-    try {
-      const post: Post = await this.postModel.findById(postId);
-      if (!post) throw new BadRequestException('Post not found');
-      return await post.remove();
-    } catch (error) {
-      console.log(error);
-    }
+  async createPost(post: CreatePostDto): Promise<PostDetails> {
+    const newPost = new this.postModel(post);
+    const result = await newPost.save();
+    if (!result) throw new InternalServerErrorException('Post Not Created');
+    return this._getPostDetials(result);
   }
 
-  async findAllPost(): Promise<any> {
-    try {
-      const posts: any = await this.postModel.find();
-      if (!posts) throw new BadRequestException('Posts not found');
-      return posts;
-    } catch (error) {
-      console.log(error);
-    }
+  async updatePost(postId: string, post: UpdatePostDto): Promise<PostDetails> {
+    const existingPost = this.findById(postId);
+    if (!existingPost) throw new BadRequestException('Post not found');
+    const updatedPost = await this.postModel
+      .findByIdAndUpdate(postId, post, {
+        new: true,
+      })
+      .exec();
+    return this._getPostDetials(updatedPost);
   }
 
-  async findOnePost(postId: string): Promise<any> {
-    try {
-      const post: Post = await this.postModel.findById(postId);
-      if (!post) throw new BadRequestException('Post not found');
-      return post;
-    } catch (error) {
-      console.log(error);
-    }
+  async deletePost(postId: string): Promise<{ response: string }> {
+    const existingPost = this.findById(postId);
+    if (!existingPost)
+      throw new BadRequestException('Post not found, Failed to delete');
+    await this.postModel.findByIdAndDelete(postId);
+    return { response: 'Post deleted successfully' };
   }
 
-  async findOnePostComments(postId: string): Promise<any> {
-    try {
-      return await this.commentsService.findCommentsByPostId(postId);
-    } catch (error) {
-      console.log(error);
-    }
+  async findAll(): Promise<any> {
+    const posts = await this.postModel.find().exec();
+    if (!posts) throw new BadRequestException('Posts not found');
+    return posts.map((post) => this._getPostDetials(post));
+  }
+
+  async findPostComments(postId: string): Promise<any> {
+    return await this.commentsService.findById(postId);
   }
 }
