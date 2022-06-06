@@ -1,0 +1,7 @@
+{
+	"prettier.printWidth": 500,
+	"editor.wordWrap": "off",
+	"editor.wordWrapColumn": 1000,
+	"prettier.requireConfig": true,
+	"cSpell.words": ["sindresorhus"]
+}
